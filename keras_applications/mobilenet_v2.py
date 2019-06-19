@@ -127,13 +127,13 @@ def _make_divisible(v, divisor, min_value=None):
 def MobileNetV2(input_shape=None,
                 alpha=1.0,
                 include_top=True,
+                dropout=1e-3,
                 weights='imagenet',
                 input_tensor=None,
                 pooling=None,
                 classes=1000,
                 **kwargs):
     """Instantiates the MobileNetV2 architecture.
-
     # Arguments
         input_shape: optional shape tuple, to be specified if you would
             like to use a model with an input img resolution that is not
@@ -177,17 +177,15 @@ def MobileNetV2(input_shape=None,
         classes: optional number of classes to classify images
             into, only to be specified if `include_top` is True, and
             if no `weights` argument is specified.
-
     # Returns
         A Keras model instance.
-
     # Raises
         ValueError: in case of invalid argument for `weights`,
             or invalid input shape or invalid alpha, rows when
             weights='imagenet'
     """
-    global backend, layers, models, keras_utils
-    backend, layers, models, keras_utils = get_submodules_from_kwargs(kwargs)
+#     global backend, layers, models, keras_utils
+#     backend, layers, models, keras_utils = get_submodules_from_kwargs(kwargs)
 
     if not (weights in {'imagenet', None} or os.path.exists(weights)):
         raise ValueError('The `weights` argument should be either '
@@ -315,6 +313,9 @@ def MobileNetV2(input_shape=None,
                       padding='valid',
                       use_bias=False,
                       name='Conv1')(x)
+    
+    x = layers.Dropout(dropout, name='dropout')(x)
+    
     x = layers.BatchNormalization(axis=channel_axis,
                                   epsilon=1e-3,
                                   momentum=0.999,
@@ -374,6 +375,8 @@ def MobileNetV2(input_shape=None,
                       kernel_size=1,
                       use_bias=False,
                       name='Conv_1')(x)
+    x = layers.Dropout(dropout)(x)
+    
     x = layers.BatchNormalization(axis=channel_axis,
                                   epsilon=1e-3,
                                   momentum=0.999,
@@ -382,6 +385,7 @@ def MobileNetV2(input_shape=None,
 
     if include_top:
         x = layers.GlobalAveragePooling2D()(x)
+        x = layers.Dropout(dropout)(x)
         x = layers.Dense(classes, activation='softmax',
                          use_bias=True, name='Logits')(x)
     else:
@@ -439,6 +443,7 @@ def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id):
                           use_bias=False,
                           activation=None,
                           name=prefix + 'expand')(x)
+        x = layers.Dropout(dropout,name=prefix + 'expand_dropout')(x)
         x = layers.BatchNormalization(axis=channel_axis,
                                       epsilon=1e-3,
                                       momentum=0.999,
@@ -457,6 +462,7 @@ def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id):
                                use_bias=False,
                                padding='same' if stride == 1 else 'valid',
                                name=prefix + 'depthwise')(x)
+    x = layers.Dropout(dropout,name=prefix + 'depthwise_dropout')(x)
     x = layers.BatchNormalization(axis=channel_axis,
                                   epsilon=1e-3,
                                   momentum=0.999,
@@ -471,6 +477,7 @@ def _inverted_res_block(inputs, expansion, stride, alpha, filters, block_id):
                       use_bias=False,
                       activation=None,
                       name=prefix + 'project')(x)
+    x = layers.Dropout(dropout,name=prefix + 'project_dropout')(x)
     x = layers.BatchNormalization(axis=channel_axis,
                                   epsilon=1e-3,
                                   momentum=0.999,
