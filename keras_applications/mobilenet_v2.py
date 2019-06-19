@@ -184,8 +184,8 @@ def MobileNetV2(input_shape=None,
             or invalid input shape or invalid alpha, rows when
             weights='imagenet'
     """
-#     global backend, layers, models, keras_utils
-#     backend, layers, models, keras_utils = get_submodules_from_kwargs(kwargs)
+    global backend, layers, models, keras_utils
+    backend, layers, models, keras_utils = get_submodules_from_kwargs(kwargs)
 
     if not (weights in {'imagenet', None} or os.path.exists(weights)):
         raise ValueError('The `weights` argument should be either '
